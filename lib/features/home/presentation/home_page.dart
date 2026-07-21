@@ -17,45 +17,94 @@ class _HomePageState extends State<HomePage> {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
+      builder: (_) => const Center(
+        child: CircularProgressIndicator(),
+      ),
     );
 
     try {
-      final medicine = await _medicineRepository.fetchByMedicineId(medicineId);
+      final medicine = await _medicineRepository.fetchByMedicineId(
+        medicineId,
+      );
 
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       Navigator.of(context, rootNavigator: true).pop();
 
       if (medicine == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Medicine not found')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Medicine not found'),
+          ),
+        );
         return;
       }
 
       await Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => MedicinePage(medicine: medicine)),
+        MaterialPageRoute(
+          builder: (_) => MedicinePage(medicine: medicine),
+        ),
       );
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
+    } catch (e) {
+      if (!mounted) return;
 
       Navigator.of(context, rootNavigator: true).pop();
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to fetch medicine details')),
+        const SnackBar(
+          content: Text('Unable to fetch medicine details'),
+        ),
       );
     }
   }
 
-  Future<void> _searchMedicine() => _fetchMedicine('MED001');
+  Future<void> _searchMedicine() async {
+    final TextEditingController controller = TextEditingController();
+
+    final medicineId = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Search Medicine'),
+          content: TextField(
+            controller: controller,
+            textCapitalization: TextCapitalization.characters,
+            decoration: const InputDecoration(
+              hintText: 'Enter Medicine ID (e.g. MED001)',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(
+                  context,
+                  controller.text.trim().toUpperCase(),
+                );
+              },
+              child: const Text('Search'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (medicineId == null || medicineId.isEmpty) {
+      return;
+    }
+
+    await _fetchMedicine(medicineId);
+  }
 
   Future<void> _scanMedicine() async {
     final medicineId = await Navigator.of(context).push<String>(
-      MaterialPageRoute<String>(builder: (_) => const ScannerPage()),
+      MaterialPageRoute(
+        builder: (_) => const ScannerPage(),
+      ),
     );
 
     if (!mounted || medicineId == null) {
@@ -68,7 +117,9 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('MediTrace')),
+      appBar: AppBar(
+        title: const Text('MediTrace'),
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -79,7 +130,7 @@ class _HomePageState extends State<HomePage> {
               FilledButton.icon(
                 onPressed: _scanMedicine,
                 icon: const Icon(Icons.qr_code_scanner),
-                label: const Text('Scan QR Code'),
+                label: const Text('Scan QR / Data Matrix'),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(56),
                 ),
