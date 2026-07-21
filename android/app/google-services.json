@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "440138291488",
+    "project_id": "meditrace-8967a",
+    "storage_bucket": "meditrace-8967a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:440138291488:android:a34827859c6c2394039f45",
+        "android_client_info": {
+          "package_name": "com.example.meditrace"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_LFcgy9agSx8oW8dzuJyihxOg2hYGR2o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
