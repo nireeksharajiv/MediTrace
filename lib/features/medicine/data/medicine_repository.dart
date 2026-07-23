@@ -7,20 +7,23 @@ class MedicineRepository {
 
   final FirebaseFirestore _firestore;
 
-  Future<Medicine?> fetchByMedicineId(String medicineId) async {
+  Future<Medicine?> getMedicineByGtin(String gtin) async {
     final snapshot = await _firestore
         .collection('medicines')
-        .where('medicineId', isEqualTo: medicineId)
-        .limit(1)
+        .doc(gtin)
         .get();
 
-    if (snapshot.docs.isEmpty) {
+    if (!snapshot.exists) {
       return null;
     }
 
-    final data = snapshot.docs.first.data();
+    final data = snapshot.data();
+    if (data == null) {
+      return null;
+    }
+
     return Medicine(
-      medicineId: _text(data['medicineId']),
+      gtin: snapshot.id,
       medicineName: _text(data['medicineName']),
       manufacturer: _text(data['manufacturer']),
       batchNumber: _text(data['batchNumber']),

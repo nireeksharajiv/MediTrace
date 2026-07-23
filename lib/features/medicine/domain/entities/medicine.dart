@@ -1,6 +1,6 @@
 class Medicine {
   const Medicine({
-    required this.medicineId,
+    required this.gtin,
     required this.medicineName,
     required this.manufacturer,
     required this.batchNumber,
@@ -11,7 +11,7 @@ class Medicine {
     required this.description,
   });
 
-  final String medicineId;
+  final String gtin;
   final String medicineName;
   final String manufacturer;
   final String batchNumber;

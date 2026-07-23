@@ -13,7 +13,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final MedicineRepository _medicineRepository = MedicineRepository();
 
-  Future<void> _fetchMedicine(String medicineId) async {
+  Future<void> _fetchMedicine(String gtin) async {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -23,8 +23,8 @@ class _HomePageState extends State<HomePage> {
     );
 
     try {
-      final medicine = await _medicineRepository.fetchByMedicineId(
-        medicineId,
+      final medicine = await _medicineRepository.getMedicineByGtin(
+        gtin,
       );
 
       if (!mounted) return;
@@ -61,16 +61,15 @@ class _HomePageState extends State<HomePage> {
   Future<void> _searchMedicine() async {
     final TextEditingController controller = TextEditingController();
 
-    final medicineId = await showDialog<String>(
+    final gtin = await showDialog<String>(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('Search Medicine'),
           content: TextField(
             controller: controller,
-            textCapitalization: TextCapitalization.characters,
             decoration: const InputDecoration(
-              hintText: 'Enter Medicine ID (e.g. MED001)',
+              hintText: 'Enter GTIN',
               border: OutlineInputBorder(),
             ),
           ),
@@ -83,7 +82,7 @@ class _HomePageState extends State<HomePage> {
               onPressed: () {
                 Navigator.pop(
                   context,
-                  controller.text.trim().toUpperCase(),
+                  controller.text.trim(),
                 );
               },
               child: const Text('Search'),
@@ -93,25 +92,25 @@ class _HomePageState extends State<HomePage> {
       },
     );
 
-    if (medicineId == null || medicineId.isEmpty) {
+    if (gtin == null || gtin.isEmpty) {
       return;
     }
 
-    await _fetchMedicine(medicineId);
+    await _fetchMedicine(gtin);
   }
 
   Future<void> _scanMedicine() async {
-    final medicineId = await Navigator.of(context).push<String>(
+    final scannedGTIN = await Navigator.of(context).push<String>(
       MaterialPageRoute(
         builder: (_) => const ScannerPage(),
       ),
     );
 
-    if (!mounted || medicineId == null) {
+    if (!mounted || scannedGTIN == null) {
       return;
     }
 
-    await _fetchMedicine(medicineId);
+    await _fetchMedicine(scannedGTIN);
   }
 
   @override

@@ -23,8 +23,8 @@ class _ScannerPageState extends State<ScannerPage> {
       return;
     }
 
-    final medicineId = capture.barcodes.first.rawValue?.trim();
-    if (medicineId == null || medicineId.isEmpty) {
+    final scannedGTIN = capture.barcodes.first.rawValue?.trim();
+    if (scannedGTIN == null || scannedGTIN.isEmpty) {
       return;
     }
 
@@ -32,7 +32,7 @@ class _ScannerPageState extends State<ScannerPage> {
     await _controller.stop();
 
     if (mounted) {
-      Navigator.of(context).pop(medicineId);
+      Navigator.of(context).pop(scannedGTIN);
     }
   }
 
