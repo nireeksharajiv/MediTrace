@@ -23,8 +23,9 @@ class _ScannerPageState extends State<ScannerPage> {
       return;
     }
 
-    final scannedGTIN = capture.barcodes.first.rawValue?.trim();
-    if (scannedGTIN == null || scannedGTIN.isEmpty) {
+    // Keep the complete Data Matrix text so HomePage can parse its GTIN/dates.
+    final scannedPayload = capture.barcodes.first.rawValue?.trim();
+    if (scannedPayload == null || scannedPayload.isEmpty) {
       return;
     }
 
@@ -32,7 +33,7 @@ class _ScannerPageState extends State<ScannerPage> {
     await _controller.stop();
 
     if (mounted) {
-      Navigator.of(context).pop(scannedGTIN);
+      Navigator.of(context).pop(scannedPayload);
     }
   }
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:meditrace/features/medicine/data/medicine_repository.dart';
 import 'package:meditrace/features/medicine/presentation/medicine_page.dart';
+import 'package:meditrace/features/medicine/domain/entities/verification_result.dart';
+import 'package:meditrace/features/medicine/presentation/offline_medicine_page.dart';
 import 'package:meditrace/features/scanner/presentation/scanner_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -100,17 +102,33 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _scanMedicine() async {
-    final scannedGTIN = await Navigator.of(context).push<String>(
+    // Scanner returns the complete Data Matrix payload, not only its first line.
+    final scannedPayload = await Navigator.of(context).push<String>(
       MaterialPageRoute(
         builder: (_) => const ScannerPage(),
       ),
     );
 
-    if (!mounted || scannedGTIN == null) {
+    if (!mounted || scannedPayload == null) {
       return;
     }
 
-    await _fetchMedicine(scannedGTIN);
+    try {
+      final payload = ScannedMedicinePayload.parse(scannedPayload);
+      if (!mounted) return;
+
+      // Open the offline-first page before it attempts a Firestore request.
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => OfflineMedicinePage(payload: payload),
+        ),
+      );
+    } on FormatException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    }
   }
 
   @override
