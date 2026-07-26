@@ -54,7 +54,7 @@ class _HomePageState extends State<HomePage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Unable to fetch medicine details'),
+          content: Text('Unable to decode GS1 Data Matrix.'),
         ),
       );
     }
@@ -102,19 +102,34 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _scanMedicine() async {
-    // Scanner returns the complete Data Matrix payload, not only its first line.
-    final scannedPayload = await Navigator.of(context).push<String>(
+    final result = await Navigator.of(context).push<Object>(
       MaterialPageRoute(
         builder: (_) => const ScannerPage(),
       ),
     );
 
-    if (!mounted || scannedPayload == null) {
+    if (!mounted || result == null) {
       return;
     }
 
+    String rawBarcode = '';
+    String formatName = 'DataMatrix';
+
+    if (result is ScannedBarcodeResult) {
+      rawBarcode = result.rawBarcode;
+      formatName = result.formatName;
+    } else if (result is String) {
+      rawBarcode = result;
+    }
+
+    if (rawBarcode.isEmpty) return;
+
     try {
-      final payload = ScannedMedicinePayload.parse(scannedPayload);
+      final payload = ScannedMedicinePayload.parse(
+        rawBarcode,
+        barcodeFormat: formatName,
+      );
+
       if (!mounted) return;
 
       // Open the offline-first page before it attempts a Firestore request.
@@ -126,7 +141,20 @@ class _HomePageState extends State<HomePage> {
     } on FormatException catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.message)),
+        SnackBar(
+          content: Text(
+            error.message.isNotEmpty
+                ? error.message
+                : 'Unable to decode GS1 Data Matrix.',
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to decode GS1 Data Matrix.'),
+        ),
       );
     }
   }

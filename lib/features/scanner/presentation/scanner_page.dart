@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+class ScannedBarcodeResult {
+  final String rawBarcode;
+  final String formatName;
+
+  const ScannedBarcodeResult({
+    required this.rawBarcode,
+    required this.formatName,
+  });
+}
+
 class ScannerPage extends StatefulWidget {
   const ScannerPage({super.key});
 
@@ -23,24 +33,33 @@ class _ScannerPageState extends State<ScannerPage> {
       return;
     }
 
-    // Keep the complete Data Matrix text so HomePage can parse its GTIN/dates.
-    final scannedPayload = capture.barcodes.first.rawValue?.trim();
+    final barcode = capture.barcodes.first;
+    final scannedPayload = barcode.rawValue?.trim();
     if (scannedPayload == null || scannedPayload.isEmpty) {
       return;
     }
+
+    final formatName = barcode.format.name.isNotEmpty
+        ? barcode.format.name
+        : 'DataMatrix';
 
     _hasScanned = true;
     await _controller.stop();
 
     if (mounted) {
-      Navigator.of(context).pop(scannedPayload);
+      Navigator.of(context).pop(
+        ScannedBarcodeResult(
+          rawBarcode: scannedPayload,
+          formatName: formatName,
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan QR Code')),
+      appBar: AppBar(title: const Text('Scan QR / Data Matrix')),
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -63,7 +82,7 @@ class _ScannerPageState extends State<ScannerPage> {
             child: Padding(
               padding: EdgeInsets.all(32),
               child: Text(
-                'Position the medicine QR code inside the frame.',
+                'Position the medicine Data Matrix or QR code inside the frame.',
                 style: TextStyle(color: Colors.white),
                 textAlign: TextAlign.center,
               ),

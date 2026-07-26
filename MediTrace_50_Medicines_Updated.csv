@@ -1,0 +1,51 @@
+GTIN,medicineName,manufacturer,batchNumber,manufacturingDate,expiryDate,dosage,status,description,serialNumber
+8901234560013,Paracetamol 500 mg,Sun Pharma,BAT2026001,2026-01-15,2028-01-14,As directed by physician,Genuine,Used for fever and mild pain relief.,SN100001
+8901234560020,Dolo 650,Micro Labs,BAT2026002,2026-01-15,2028-01-14,As directed by physician,Genuine,Used to reduce fever and relieve pain.,SN100001
+8901234560037,Crocin Advance,GSK,BAT2026003,2026-01-15,2028-01-14,As directed by physician,Genuine,Provides relief from fever and body pain.,SN100004
+8901234560044,Cetirizine 10 mg,Cipla,BAT2026004,2026-01-15,2028-01-14,As directed by physician,Genuine,Relieves allergy symptoms.,SN100005
+8901234560051,Levocetirizine 5 mg,Dr. Reddy's,BAT2026005,2026-01-15,2028-01-14,As directed by physician,Genuine,Treats allergic rhinitis and urticaria.,SN100006
+8901234560068,Amoxicillin 500 mg,Mankind,BAT2026006,2026-01-15,2024-12-31,As directed by physician,Genuine,Antibiotic for bacterial infections.,SN100007
+8901234560075,Augmentin 625,GSK,BAT2026007,2026-01-15,2028-01-14,As directed by physician,Genuine,Broad-spectrum antibiotic.,SN100008
+8901234560082,Azithromycin 500 mg,Cipla,BAT2026008,2026-01-15,2028-01-14,As directed by physician,Genuine,Treats bacterial infections.,SN100009
+8901234560099,Pantoprazole 40 mg,Sun Pharma,BAT2026009,2026-01-15,2028-01-14,As directed by physician,Genuine,Reduces stomach acid.,SN100010
+8901234560105,Omeprazole 20 mg,Dr. Reddy's,BAT2026010,2026-01-15,2028-01-14,As directed by physician,Genuine,Treats acidity and ulcers.,
+8901234560112,Metformin 500 mg,USV,BAT2026011,2026-01-15,2028-01-14,As directed by physician,Genuine,Controls blood sugar in diabetes.,SN100012
+8901234560129,Telmisartan 40 mg,Glenmark,BAT2026012,2026-01-15,2028-01-14,As directed by physician,Genuine,Treats high blood pressure.,SN100013
+8901234560136,Amlodipine 5 mg,Cipla,BAT2026013,2026-01-15,2024-12-31,As directed by physician,Genuine,Controls hypertension.,SN100014
+8901234560143,Atorvastatin 10 mg,Sun Pharma,BAT2026014,2026-01-15,2028-01-14,As directed by physician,Genuine,Reduces cholesterol.,SN100015
+8901234560150,Aspirin 75 mg,Bayer,BAT2026015,2026-01-15,2028-01-14,As directed by physician,Genuine,Blood thinner.,SN100016
+8901234560167,Vitamin C 500 mg,Himalaya,BAT2026016,2026-01-15,2028-01-14,As directed by physician,Genuine,Vitamin supplement.,SN100017
+8901234560174,Vitamin D3 60000 IU,Mankind,BAT2026017,2026-01-15,2028-01-14,As directed by physician,Genuine,Vitamin D supplement.,SN100018
+8901234560181,Calcium Tablets,Cipla,BAT2026018,2026-01-15,2028-01-14,As directed by physician,Genuine,Calcium supplement.,SN100019
+8901234560198,ORS Powder,FDC,BAT2026019,2026-01-15,2028-01-14,As directed by physician,Genuine,Prevents dehydration.,SN100020
+8901234560204,Zinc Tablets,Cipla,BAT2026020,2026-01-15,2028-01-14,As directed by physician,Genuine,Zinc supplement.,
+8901234560211,Ibuprofen 400 mg,Abbott,BAT2026021,2026-01-15,2028-01-14,As directed by physician,Genuine,Pain relief and anti-inflammatory.,SN100022
+8901234560228,Diclofenac 50 mg,Sun Pharma,BAT2026022,2026-01-15,2028-01-14,As directed by physician,Genuine,Pain and inflammation.,SN100023
+8901234560235,Rabeprazole 20 mg,Lupin,BAT2026023,2026-01-15,2028-01-14,As directed by physician,Genuine,Acidity treatment.,SN100024
+8901234560242,Losartan 50 mg,Torrent,BAT2026024,2026-01-15,2028-01-14,As directed by physician,Genuine,Hypertension medicine.,SN100025
+8901234560259,Glimepiride 2 mg,USV,BAT2026025,2026-01-15,2028-01-14,As directed by physician,Genuine,Diabetes medicine.,SN100026
+8901234560266,Insulin Regular,Novo Nordisk,BAT2026026,2026-01-15,2024-12-31,As directed by physician,Genuine,Insulin therapy.,SN100027
+8901234560273,Montelukast 10 mg,Cipla,BAT2026027,2026-01-15,2028-01-14,As directed by physician,Genuine,Asthma and allergy.,SN100028
+8901234560280,Domperidone 10 mg,Torrent,BAT2026028,2026-01-15,2028-01-14,As directed by physician,Genuine,Anti-nausea medicine.,SN100029
+8901234560297,Ondansetron 4 mg,Sun Pharma,BAT2026029,2026-01-15,2028-01-14,As directed by physician,Genuine,Prevents nausea and vomiting.,SN100030
+8901234560303,Loperamide 2 mg,Abbott,BAT2026030,2026-01-15,2028-01-14,As directed by physician,Genuine,Treats diarrhea.,
+8901234560310,Doxycycline 100 mg,Dr. Reddy's,BAT2026031,2026-01-15,2028-01-14,As directed by physician,Genuine,Antibiotic.,SN100032
+8901234560327,Cefixime 200 mg,Lupin,BAT2026032,2026-01-15,2028-01-14,As directed by physician,Genuine,Antibiotic.,SN100033
+8901234560334,Clopidogrel 75 mg,Sun Pharma,BAT2026033,2026-01-15,2028-01-14,As directed by physician,Genuine,Prevents blood clots.,SN100034
+8901234560341,Rosuvastatin 10 mg,Cipla,BAT2026034,2026-01-15,2028-01-14,As directed by physician,Genuine,Lowers cholesterol.,SN100035
+8901234560358,Thyroxine 50 mcg,Abbott,BAT2026035,2026-01-15,2028-01-14,As directed by physician,Genuine,Treats hypothyroidism.,SN100036
+8901234560365,Hydroxychloroquine 200 mg,Ipca,BAT2026036,2026-01-15,2028-01-14,As directed by physician,Genuine,Autoimmune treatment.,SN100037
+8901234560372,Albendazole 400 mg,Mankind,BAT2026037,2026-01-15,2028-01-14,As directed by physician,Genuine,Deworming medicine.,SN100038
+8901234560389,Fluconazole 150 mg,Cipla,BAT2026038,2026-01-15,2028-01-14,As directed by physician,Genuine,Antifungal medicine.,SN100039
+8901234560396,Terbinafine 250 mg,Novartis,BAT2026039,2026-01-15,2028-01-14,As directed by physician,Genuine,Antifungal treatment.,SN100040
+8901234560402,Salbutamol Tablets,Cipla,BAT2026040,2026-01-15,2028-01-14,As directed by physician,Genuine,Bronchodilator.,
+8901234560419,Ambroxol Syrup,Mankind,BAT2026041,2026-01-15,2024-12-31,As directed by physician,Genuine,Relieves cough.,SN100042
+8901234560426,Cetirizine Syrup,Dr. Reddy's,BAT2026042,2026-01-15,2028-01-14,As directed by physician,Genuine,Children's allergy medicine.,SN100043
+8901234560433,Multivitamin Capsules,Himalaya,BAT2026043,2026-01-15,2028-01-14,As directed by physician,Genuine,Nutritional supplement.,SN100044
+8901234560440,Iron Folic Acid,Cipla,BAT2026044,2026-01-15,2028-01-14,As directed by physician,Genuine,Treats iron deficiency.,SN100045
+8901234560457,Folic Acid 5 mg,Abbott,BAT2026045,2026-01-15,2028-01-14,As directed by physician,Genuine,Vitamin B9 supplement.,SN100046
+8901234560464,Probiotic Capsules,Sun Pharma,BAT2026046,2026-01-15,2028-01-14,As directed by physician,Genuine,Supports gut health.,SN100047
+8901234560471,Lactulose Syrup,Abbott,BAT2026047,2026-01-15,2028-01-14,As directed by physician,Genuine,Treats constipation.,SN100048
+8901234560488,Cough Lozenges,Himalaya,BAT2026048,2026-01-15,2028-01-14,As directed by physician,Genuine,Soothes sore throat.,SN100049
+8901234560495,Antacid Suspension,Pfizer,BAT2026049,2026-01-15,2028-01-14,As directed by physician,Genuine,Relieves acidity.,SN100001
+8901234560501,Electral Powder,FDC,BAT2026050,2026-01-15,2028-01-14,As directed by physician,Genuine,Oral rehydration solution.,SN100001
