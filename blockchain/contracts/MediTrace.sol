@@ -23,6 +23,38 @@ contract MediTrace is EIP712 {
         Received
     }
 
+    // Safety status (Phase 3A)
+    enum SafetyStatus {
+        Normal,
+        Quarantined,
+        Recalled
+    }
+
+    // =========================================
+    // SAFETY RESTRICTION STORES (PHASE 3A)
+    // =========================================
+
+    // 1. Individual unit safety stores
+    mapping(bytes32 => bool) public unitQuarantined;
+    mapping(bytes32 => string) public unitQuarantineReason;
+    mapping(bytes32 => bool) public unitRecalled;
+    mapping(bytes32 => string) public unitRecallReason;
+
+    // 2. Manufacturer-specific batch safety stores
+    mapping(bytes32 => bool) public mfrBatchQuarantined;
+    mapping(bytes32 => string) public mfrBatchQuarantineReason;
+    mapping(bytes32 => bool) public mfrBatchRecalled;
+    mapping(bytes32 => string) public mfrBatchRecallReason;
+
+    // 3. Global batch safety stores
+    mapping(bytes32 => bool) public globalBatchQuarantined;
+    mapping(bytes32 => string) public globalBatchQuarantineReason;
+    mapping(bytes32 => bool) public globalBatchRecalled;
+    mapping(bytes32 => string) public globalBatchRecallReason;
+
+    // 4. Historical batch reporters tracking
+    mapping(bytes32 => mapping(address => bool)) public batchReporters;
+
     // Medicine information
     struct Medicine {
         string gtin;
@@ -86,6 +118,109 @@ contract MediTrace is EIP712 {
         address indexed manufacturer,
         address indexed distributor,
         uint256 nonce
+    );
+
+    // Safety events (Phase 3A)
+    event MedicineQuarantined(
+        bytes32 indexed medicineId,
+        string gtin,
+        string serialNumber,
+        string reason,
+        address indexed initiator,
+        uint256 timestamp
+    );
+
+    event MedicineQuarantineLifted(
+        bytes32 indexed medicineId,
+        string gtin,
+        string serialNumber,
+        string reason,
+        address indexed initiator,
+        uint256 timestamp
+    );
+
+    event MedicineRecalled(
+        bytes32 indexed medicineId,
+        string gtin,
+        string serialNumber,
+        string reason,
+        address indexed initiator,
+        uint256 timestamp
+    );
+
+    event MfrBatchQuarantined(
+        bytes32 indexed mfrBatchKey,
+        address indexed manufacturer,
+        string gtin,
+        string batchNumber,
+        string reason,
+        address indexed initiator,
+        uint256 timestamp
+    );
+
+    event MfrBatchQuarantineLifted(
+        bytes32 indexed mfrBatchKey,
+        address indexed manufacturer,
+        string gtin,
+        string batchNumber,
+        string reason,
+        address indexed initiator,
+        uint256 timestamp
+    );
+
+    event MfrBatchRecalled(
+        bytes32 indexed mfrBatchKey,
+        address indexed manufacturer,
+        string gtin,
+        string batchNumber,
+        string reason,
+        address indexed initiator,
+        uint256 timestamp
+    );
+
+    event GlobalBatchQuarantined(
+        bytes32 indexed globalBatchKey,
+        string gtin,
+        string batchNumber,
+        string reason,
+        address indexed initiator,
+        uint256 timestamp
+    );
+
+    event GlobalBatchQuarantineLifted(
+        bytes32 indexed globalBatchKey,
+        string gtin,
+        string batchNumber,
+        string reason,
+        address indexed initiator,
+        uint256 timestamp
+    );
+
+    event GlobalBatchRecalled(
+        bytes32 indexed globalBatchKey,
+        string gtin,
+        string batchNumber,
+        string reason,
+        address indexed initiator,
+        uint256 timestamp
+    );
+
+    event MedicineReceivedUnderSafetyHold(
+        bytes32 indexed medicineId,
+        address indexed distributor,
+        uint8 effectiveSafetyStatus,
+        string reason,
+        uint256 timestamp
+    );
+
+    event DefectReported(
+        bytes32 indexed mfrBatchKey,
+        address indexed reporter,
+        string gtin,
+        string batchNumber,
+        string reason,
+        string evidenceURI,
+        uint256 timestamp
     );
 
     // Constructor
@@ -176,6 +311,21 @@ contract MediTrace is EIP712 {
         return keccak256(abi.encode(gtin, serialNumber));
     }
 
+    function getMfrBatchKey(
+        address manufacturer,
+        string memory gtin,
+        string memory batchNumber
+    ) public pure returns (bytes32) {
+        return keccak256(abi.encode(manufacturer, gtin, batchNumber));
+    }
+
+    function getGlobalBatchKey(
+        string memory gtin,
+        string memory batchNumber
+    ) public pure returns (bytes32) {
+        return keccak256(abi.encode(gtin, batchNumber));
+    }
+
     // =========================================
     // MEDICINE REGISTRATION
     // =========================================
@@ -199,6 +349,18 @@ contract MediTrace is EIP712 {
             "Medicine expired"
         );
 
+        bytes32 mfrBatchKey = getMfrBatchKey(msg.sender, gtin, batchNumber);
+        bytes32 globalBatchKey = getGlobalBatchKey(gtin, batchNumber);
+
+        require(
+            !mfrBatchRecalled[mfrBatchKey] && !globalBatchRecalled[globalBatchKey],
+            "Batch is recalled"
+        );
+        require(
+            !mfrBatchQuarantined[mfrBatchKey] && !globalBatchQuarantined[globalBatchKey],
+            "Batch is quarantined"
+        );
+
         bytes32 id = getMedicineId(gtin, serialNumber);
 
         require(
@@ -218,6 +380,10 @@ contract MediTrace is EIP712 {
             dispatchedAt: 0,
             receivedAt: 0
         });
+
+        if (!batchReporters[mfrBatchKey][msg.sender]) {
+            batchReporters[mfrBatchKey][msg.sender] = true;
+        }
 
         emit MedicineRegistered(
             id,
@@ -259,6 +425,13 @@ contract MediTrace is EIP712 {
         require(
             distributors[distributor],
             "Distributor not authorized"
+        );
+
+        _enforceNotRestricted(
+            medicine.registeredBy,
+            gtin,
+            serialNumber,
+            medicine.batchNumber
         );
 
         medicine.status = Status.Dispatched;
@@ -335,6 +508,13 @@ contract MediTrace is EIP712 {
             keccak256(bytes(medicine.batchNumber)) ==
             keccak256(bytes(authorization.batchNumber)),
             "Batch mismatch"
+        );
+
+        _enforceNotRestricted(
+            authorization.manufacturer,
+            authorization.gtin,
+            authorization.serialNumber,
+            authorization.batchNumber
         );
 
         // 9. Create EIP-712 struct hash
@@ -419,7 +599,29 @@ contract MediTrace is EIP712 {
         medicine.status = Status.Received;
         medicine.receivedAt = block.timestamp;
 
-        emit MedicineReceived(id, msg.sender);
+        bytes32 mfrKey = getMfrBatchKey(
+            medicine.registeredBy,
+            gtin,
+            medicine.batchNumber
+        );
+        bytes32 globalKey = getGlobalBatchKey(gtin, medicine.batchNumber);
+        (SafetyStatus safety, string memory safetyReason) = _checkRestriction(
+            id,
+            mfrKey,
+            globalKey
+        );
+
+        if (safety != SafetyStatus.Normal) {
+            emit MedicineReceivedUnderSafetyHold(
+                id,
+                msg.sender,
+                uint8(safety),
+                safetyReason,
+                block.timestamp
+            );
+        } else {
+            emit MedicineReceived(id, msg.sender);
+        }
     }
 
     // =========================================
@@ -453,6 +655,347 @@ contract MediTrace is EIP712 {
         );
 
         return medicines[id];
+    }
+
+    // =========================================
+    // SAFETY RESTRICTION MANAGEMENT (PHASE 3A)
+    // =========================================
+
+    // 1. Unit safety operations
+    function quarantineMedicine(
+        string memory gtin,
+        string memory serialNumber,
+        string memory reason
+    ) external {
+        _setUnitSafety(gtin, serialNumber, reason, 1);
+    }
+
+    function liftUnitQuarantine(
+        string memory gtin,
+        string memory serialNumber,
+        string memory reason
+    ) external onlyAdmin {
+        _setUnitSafety(gtin, serialNumber, reason, 2);
+    }
+
+    function recallMedicine(
+        string memory gtin,
+        string memory serialNumber,
+        string memory reason
+    ) external {
+        _setUnitSafety(gtin, serialNumber, reason, 3);
+    }
+
+    function _setUnitSafety(
+        string memory gtin,
+        string memory serialNumber,
+        string memory reason,
+        uint8 action
+    ) internal {
+        require(bytes(reason).length > 0, "Reason required");
+        bytes32 id = getMedicineId(gtin, serialNumber);
+        Medicine storage medicine = medicines[id];
+        require(medicine.status != Status.None, "Medicine not found");
+
+        if (action == 2) {
+            require(msg.sender == admin, "Admin only");
+        } else {
+            require(
+                msg.sender == admin || msg.sender == medicine.registeredBy,
+                "Unauthorized"
+            );
+        }
+
+        if (action == 1) {
+            unitQuarantined[id] = true;
+            unitQuarantineReason[id] = reason;
+            emit MedicineQuarantined(
+                id,
+                gtin,
+                serialNumber,
+                reason,
+                msg.sender,
+                block.timestamp
+            );
+        } else if (action == 2) {
+            require(unitQuarantined[id], "Not quarantined");
+            unitQuarantined[id] = false;
+            unitQuarantineReason[id] = reason;
+            emit MedicineQuarantineLifted(
+                id,
+                gtin,
+                serialNumber,
+                reason,
+                msg.sender,
+                block.timestamp
+            );
+        } else if (action == 3) {
+            unitRecalled[id] = true;
+            unitRecallReason[id] = reason;
+            emit MedicineRecalled(
+                id,
+                gtin,
+                serialNumber,
+                reason,
+                msg.sender,
+                block.timestamp
+            );
+        }
+    }
+
+    // 2. Manufacturer batch safety operations
+    function quarantineBatchMfr(
+        string memory gtin,
+        string memory batchNumber,
+        string memory reason
+    ) external onlyManufacturer {
+        _setMfrBatchSafety(msg.sender, gtin, batchNumber, reason, 1);
+    }
+
+    function liftMfrBatchQuarantine(
+        address manufacturer,
+        string memory gtin,
+        string memory batchNumber,
+        string memory reason
+    ) external onlyAdmin {
+        _setMfrBatchSafety(manufacturer, gtin, batchNumber, reason, 2);
+    }
+
+    function recallBatchMfr(
+        string memory gtin,
+        string memory batchNumber,
+        string memory reason
+    ) external onlyManufacturer {
+        _setMfrBatchSafety(msg.sender, gtin, batchNumber, reason, 3);
+    }
+
+    function _setMfrBatchSafety(
+        address manufacturer,
+        string memory gtin,
+        string memory batchNumber,
+        string memory reason,
+        uint8 action
+    ) internal {
+        require(bytes(gtin).length > 0, "GTIN required");
+        require(bytes(batchNumber).length > 0, "Batch required");
+        require(bytes(reason).length > 0, "Reason required");
+
+        if (action == 2) {
+            require(msg.sender == admin, "Admin only");
+        }
+
+        bytes32 mfrBatchKey = getMfrBatchKey(manufacturer, gtin, batchNumber);
+
+        if (action == 1) {
+            mfrBatchQuarantined[mfrBatchKey] = true;
+            mfrBatchQuarantineReason[mfrBatchKey] = reason;
+            emit MfrBatchQuarantined(
+                mfrBatchKey,
+                manufacturer,
+                gtin,
+                batchNumber,
+                reason,
+                msg.sender,
+                block.timestamp
+            );
+        } else if (action == 2) {
+            require(mfrBatchQuarantined[mfrBatchKey], "Not quarantined");
+            mfrBatchQuarantined[mfrBatchKey] = false;
+            mfrBatchQuarantineReason[mfrBatchKey] = reason;
+            emit MfrBatchQuarantineLifted(
+                mfrBatchKey,
+                manufacturer,
+                gtin,
+                batchNumber,
+                reason,
+                msg.sender,
+                block.timestamp
+            );
+        } else if (action == 3) {
+            mfrBatchRecalled[mfrBatchKey] = true;
+            mfrBatchRecallReason[mfrBatchKey] = reason;
+            emit MfrBatchRecalled(
+                mfrBatchKey,
+                manufacturer,
+                gtin,
+                batchNumber,
+                reason,
+                msg.sender,
+                block.timestamp
+            );
+        }
+    }
+
+    // 3. Global batch safety operations
+    function emergencyQuarantineBatchGlobal(
+        string memory gtin,
+        string memory batchNumber,
+        string memory reason
+    ) external onlyAdmin {
+        _setGlobalBatchSafety(gtin, batchNumber, reason, 1);
+    }
+
+    function liftGlobalBatchQuarantine(
+        string memory gtin,
+        string memory batchNumber,
+        string memory reason
+    ) external onlyAdmin {
+        _setGlobalBatchSafety(gtin, batchNumber, reason, 2);
+    }
+
+    function emergencyRecallBatchGlobal(
+        string memory gtin,
+        string memory batchNumber,
+        string memory reason
+    ) external onlyAdmin {
+        _setGlobalBatchSafety(gtin, batchNumber, reason, 3);
+    }
+
+    function _setGlobalBatchSafety(
+        string memory gtin,
+        string memory batchNumber,
+        string memory reason,
+        uint8 action
+    ) internal {
+        require(bytes(gtin).length > 0, "GTIN required");
+        require(bytes(batchNumber).length > 0, "Batch required");
+        require(bytes(reason).length > 0, "Reason required");
+
+        bytes32 globalBatchKey = getGlobalBatchKey(gtin, batchNumber);
+
+        if (action == 1) {
+            globalBatchQuarantined[globalBatchKey] = true;
+            globalBatchQuarantineReason[globalBatchKey] = reason;
+            emit GlobalBatchQuarantined(
+                globalBatchKey,
+                gtin,
+                batchNumber,
+                reason,
+                msg.sender,
+                block.timestamp
+            );
+        } else if (action == 2) {
+            require(globalBatchQuarantined[globalBatchKey], "Not quarantined");
+            globalBatchQuarantined[globalBatchKey] = false;
+            globalBatchQuarantineReason[globalBatchKey] = reason;
+            emit GlobalBatchQuarantineLifted(
+                globalBatchKey,
+                gtin,
+                batchNumber,
+                reason,
+                msg.sender,
+                block.timestamp
+            );
+        } else if (action == 3) {
+            globalBatchRecalled[globalBatchKey] = true;
+            globalBatchRecallReason[globalBatchKey] = reason;
+            emit GlobalBatchRecalled(
+                globalBatchKey,
+                gtin,
+                batchNumber,
+                reason,
+                msg.sender,
+                block.timestamp
+            );
+        }
+    }
+
+    // 4. Historical defect reporting
+    function reportDefect(
+        address manufacturer,
+        string memory gtin,
+        string memory batchNumber,
+        string memory reason,
+        string memory evidenceURI
+    ) external {
+        require(bytes(gtin).length > 0, "GTIN required");
+        require(bytes(batchNumber).length > 0, "Batch required");
+        require(bytes(reason).length > 0, "Reason required");
+
+        bytes32 mfrBatchKey = getMfrBatchKey(manufacturer, gtin, batchNumber);
+
+        require(
+            msg.sender == admin ||
+            manufacturers[msg.sender] ||
+            batchReporters[mfrBatchKey][msg.sender],
+            "Unauthorized to report defect"
+        );
+
+        emit DefectReported(
+            mfrBatchKey,
+            msg.sender,
+            gtin,
+            batchNumber,
+            reason,
+            evidenceURI,
+            block.timestamp
+        );
+    }
+
+    // 5. Effective safety status and query
+    function getEffectiveSafetyStatus(
+        string memory gtin,
+        string memory serialNumber
+    ) public view returns (SafetyStatus status, string memory reason) {
+        bytes32 id = getMedicineId(gtin, serialNumber);
+        Medicine storage medicine = medicines[id];
+        require(medicine.status != Status.None, "Medicine not found");
+
+        bytes32 mfrKey = getMfrBatchKey(medicine.registeredBy, gtin, medicine.batchNumber);
+        bytes32 globalKey = getGlobalBatchKey(gtin, medicine.batchNumber);
+
+        return _checkRestriction(id, mfrKey, globalKey);
+    }
+
+    function isMedicineSafe(
+        string memory gtin,
+        string memory serialNumber
+    ) external view returns (bool) {
+        (SafetyStatus status, ) = getEffectiveSafetyStatus(gtin, serialNumber);
+        return status == SafetyStatus.Normal;
+    }
+
+    // 6. Internal restriction check helpers
+    function _checkRestriction(
+        bytes32 id,
+        bytes32 mfrKey,
+        bytes32 globalKey
+    ) internal view returns (SafetyStatus, string memory) {
+        // Precedence: Recalls take precedence over Quarantines
+        if (unitRecalled[id]) {
+            return (SafetyStatus.Recalled, unitRecallReason[id]);
+        }
+        if (mfrBatchRecalled[mfrKey]) {
+            return (SafetyStatus.Recalled, mfrBatchRecallReason[mfrKey]);
+        }
+        if (globalBatchRecalled[globalKey]) {
+            return (SafetyStatus.Recalled, globalBatchRecallReason[globalKey]);
+        }
+        if (unitQuarantined[id]) {
+            return (SafetyStatus.Quarantined, unitQuarantineReason[id]);
+        }
+        if (mfrBatchQuarantined[mfrKey]) {
+            return (SafetyStatus.Quarantined, mfrBatchQuarantineReason[mfrKey]);
+        }
+        if (globalBatchQuarantined[globalKey]) {
+            return (SafetyStatus.Quarantined, globalBatchQuarantineReason[globalKey]);
+        }
+        return (SafetyStatus.Normal, "");
+    }
+
+    function _enforceNotRestricted(
+        address manufacturer,
+        string memory gtin,
+        string memory serialNumber,
+        string memory batchNumber
+    ) internal view {
+        bytes32 id = getMedicineId(gtin, serialNumber);
+        bytes32 mfrKey = getMfrBatchKey(manufacturer, gtin, batchNumber);
+        bytes32 globalKey = getGlobalBatchKey(gtin, batchNumber);
+
+        (SafetyStatus status, ) = _checkRestriction(id, mfrKey, globalKey);
+        require(status != SafetyStatus.Recalled, "Medicine is recalled");
+        require(status != SafetyStatus.Quarantined, "Medicine is quarantined");
     }
 
     // =========================================
